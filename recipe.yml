@@ -24,7 +24,7 @@ stages:
     - printf 'ID=debian\nVERSION_ID="13"\nVERSION_CODENAME=trixie\nPRETTY_NAME="Debian GNU/Linux 13 (trixie)"\n' > /etc/os-release
     - lpkg --unlock
     - apt-get update
-    - apt-get install -y --no-install-recommends git ca-certificates wget
+    - apt-get install -y --no-install-recommends git ca-certificates wget libxml2
     - cd /sources/sunshine-src/Sunshine
     - git submodule update --init --recursive --depth 1
     - chmod +x ./scripts/linux_build.sh
