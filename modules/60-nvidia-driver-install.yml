@@ -14,12 +14,12 @@ modules:
   # that still supports it. Also using the closed kernel module (nvidia-kernel-dkms), not
   # nvidia-kernel-open-dkms - the open kernel modules never supported Pascal at all.
   #
-  # --allow-unauthenticated: the built-in apt module type has no way to pass this, but it's
-  # required here - [trusted=yes] on the source line lets `apt-get update` itself succeed despite
-  # NVIDIA's key failing trixie's signature policy, but apt's solver still won't pull in this
-  # repo's *transitive* dependencies (nvidia-opencl-icd, nvidia-container-toolkit-base, etc.)
-  # without this flag, even though the explicitly-named top-level packages install fine either way.
-  - apt-get install -y --allow-unauthenticated nvidia-driver=580.178.04-1 nvidia-driver-cuda=580.178.04-1 nvidia-kernel-dkms=580.178.04-1 nvidia-settings=580.178.04-1 nvidia-xconfig=580.178.04-1 nvidia-container-toolkit
+  # --allow-unauthenticated only waives the confirmation prompt for the packages named directly
+  # on the command line - it doesn't make the solver treat the rest of an unsigned repo's contents
+  # as usable candidates for transitive dependencies (nvidia-opencl-icd, nvidia-container-toolkit-base,
+  # etc.), which is why they were still being rejected even with that flag alone. That's controlled
+  # separately by Acquire::AllowInsecureRepositories.
+  - apt-get install -y --allow-unauthenticated -o Acquire::AllowInsecureRepositories=true nvidia-driver=580.178.04-1 nvidia-driver-cuda=580.178.04-1 nvidia-kernel-dkms=580.178.04-1 nvidia-settings=580.178.04-1 nvidia-xconfig=580.178.04-1 nvidia-container-toolkit
   modules:
     - name: nvidia-official-repo
       type: shell
@@ -35,4 +35,4 @@ modules:
         # specific to using debian12's. NVIDIA hasn't reissued the key, so verification is skipped
         # for just this one repo rather than weakening apt's policy globally.
         - printf 'deb [trusted=yes] https://developer.download.nvidia.com/compute/cuda/repos/debian12/x86_64/ /\n' > /etc/apt/sources.list.d/cuda-debian12-x86_64.list
-        - apt-get update
+        - apt-get update -o Acquire::AllowInsecureRepositories=true
