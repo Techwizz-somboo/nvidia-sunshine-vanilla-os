@@ -4,7 +4,7 @@ vibversion: 1.0.7
 
 stages:
 - id: build
-  base: ghcr.io/vanilla-os/nvidia:main # Optionally, Replace this image URL with a different one i.e. nvidia:main, etc
+  base: ghcr.io/vanilla-os/gnome-nvidia-modern:dev # Experimental image (nvidia-exp-image repo) using NVIDIA's own repo for a current nvidia-open driver (595.x) instead of Debian's 550.163.01; GNOME-only base, no stable tag yet
   addincludes: true
   singlelayer: false
   labels:
