@@ -22,6 +22,7 @@ stages:
     # this base doesn't match any of its patterns, so we present as Debian trixie (which this base
     # was recently forked from) to get its apt-based dependency handling.
     - printf 'ID=debian\nVERSION_ID="13"\nVERSION_CODENAME=trixie\nPRETTY_NAME="Debian GNU/Linux 13 (trixie)"\n' > /etc/os-release
+    - lpkg --unlock
     - apt-get update
     - apt-get install -y --no-install-recommends git ca-certificates wget
     - cd /sources/sunshine-src/Sunshine
