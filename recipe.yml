@@ -3,6 +3,38 @@ id: sunshine-nvidia # Replace this ID with your image ID
 vibversion: 1.0.7
 
 stages:
+- id: sunshine-builder # Throwaway stage: builds Sunshine from source against this base's actual libs, discarded except for the resulting .deb
+  base: ghcr.io/vanilla-os/gnome-nvidia-modern:dev
+  addincludes: false
+  singlelayer: false
+  args:
+    DEBIAN_FRONTEND: noninteractive
+
+  modules:
+  - name: sunshine-src
+    type: shell
+    sources:
+      - url: https://github.com/LizardByte/Sunshine.git
+        type: git
+        tag: v2026.516.143833
+    commands:
+    # LizardByte's scripts/linux_build.sh only recognizes a fixed list of distros via /etc/os-release;
+    # this base doesn't match any of its patterns, so we present as Debian trixie (which this base
+    # was recently forked from) to get its apt-based dependency handling.
+    - printf 'ID=debian\nVERSION_ID="13"\nVERSION_CODENAME=trixie\nPRETTY_NAME="Debian GNU/Linux 13 (trixie)"\n' > /etc/os-release
+    - apt-get update
+    - apt-get install -y --no-install-recommends git ca-certificates wget
+    - cd /sources/sunshine-src/Sunshine
+    - git submodule update --init --recursive --depth 1
+    - chmod +x ./scripts/linux_build.sh
+    - ./scripts/linux_build.sh --step=deps --cuda-patches --sudo-off
+    - BRANCH=v2026.516.143833 BUILD_VERSION=2026.516.143833 COMMIT=14ffa6fdaa53f7b51512be2b3d24f3939695403c ./scripts/linux_build.sh --step=cmake --publisher-name='sunshine-nvidia (custom build)' --publisher-website='https://github.com/LizardByte/Sunshine' --publisher-issue-url='https://github.com/LizardByte/Sunshine/issues' --sudo-off
+    - ./scripts/linux_build.sh --step=validation --sudo-off
+    - ./scripts/linux_build.sh --step=build --sudo-off
+    - ./scripts/linux_build.sh --step=package --sudo-off
+    - mkdir -p /artifacts
+    - cp build/cpack_artifacts/Sunshine.deb /artifacts/sunshine.deb
+
 - id: build
   base: ghcr.io/vanilla-os/gnome-nvidia-modern:dev # Experimental image (nvidia-exp-image repo) using NVIDIA's own repo for a current nvidia-open driver (595.x) instead of Debian's 550.163.01; GNOME-only base, no stable tag yet
   addincludes: true
@@ -11,6 +43,15 @@ stages:
     maintainer: self-maintained # Optionally, Replace this with your name
   args:
     DEBIAN_FRONTEND: noninteractive # Set the image environment as non-interactive
+
+  # Sunshine's official .deb is built for Debian trixie's package versions (libicu76, libminiupnpc18, etc.),
+  # which no longer match what this rolling base actually ships (libicu78, miniupnpc 2.3.3...). Instead of
+  # vendoring a static .deb, we build it in the sunshine-builder stage above against this base's real libs,
+  # then pull in just the resulting package here.
+  copy:
+  - from: sunshine-builder
+    srcdst:
+      /artifacts/sunshine.deb: /sunshine.deb
 
   # Commands to run first before building the modules
   runs:
@@ -23,6 +64,12 @@ stages:
     commands:
     - lpkg --unlock
     - apt-get update
+
+  - name: install-sunshine
+    type: shell
+    commands:
+    - apt-get install -y --no-install-recommends /sunshine.deb
+    - rm -f /sunshine.deb
 
   # Put your custom actions below this comment
 
