@@ -23,13 +23,16 @@ modules:
   modules:
     - name: nvidia-official-repo
       type: shell
-      sources:
-        - type: file
-          # Deliberately the debian12 (bookworm) repo, not debian13/trixie: NVIDIA never published
-          # the 580 branch to the trixie repo, which starts at 590 (Pascal already dropped). The
-          # driver packages themselves aren't tied tightly to the Debian point release.
-          url: https://developer.download.nvidia.com/compute/cuda/repos/debian12/x86_64/cuda-keyring_1.1-1_all.deb
-          checksum: e7f219eab6fe4819cdb5c15b98233dc3420302d9c00883219cd3d896857cf48d
       commands:
-        - dpkg -i /sources/nvidia-official-repo/cuda-keyring_1.1-1_all/nvidia-official-repo.deb
+        # Deliberately the debian12 (bookworm) repo, not debian13/trixie: NVIDIA never published
+        # the 580 branch to the trixie repo, which starts at 590 (Pascal already dropped). The
+        # driver packages themselves aren't tied tightly to the Debian point release.
+        #
+        # [trusted=yes] instead of the usual signed-by keyring: NVIDIA's cuda-archive-keyring key
+        # (EB693B3035CD5710E231E123A4B469963BF863CC, the same one across every Debian/Ubuntu CUDA
+        # repo they publish) has a SHA1-based self-certification that trixie's apt now rejects
+        # outright (SHA1 deprecated since 2026-02-01). Same problem on debian13's repo - not
+        # specific to using debian12's. NVIDIA hasn't reissued the key, so verification is skipped
+        # for just this one repo rather than weakening apt's policy globally.
+        - printf 'deb [trusted=yes] https://developer.download.nvidia.com/compute/cuda/repos/debian12/x86_64/ /\n' > /etc/apt/sources.list.d/cuda-debian12-x86_64.list
         - apt-get update
