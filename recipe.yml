@@ -1,5 +1,5 @@
 name: Sunshine Vanilla NVIDIA # Replace this name with your image name
-id: sunshinenvidia # Replace this ID with your image ID
+id: sunshine-nvidia # Replace this ID with your image ID
 vibversion: 1.0.7
 
 stages:
