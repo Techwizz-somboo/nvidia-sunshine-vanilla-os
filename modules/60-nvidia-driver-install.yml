@@ -13,7 +13,12 @@ modules:
   # newer won't recognize a GTX 1080. 580.178.04 is the last point release on the last branch
   # that still supports it. Also using the closed kernel module (nvidia-kernel-dkms), not
   # nvidia-kernel-open-dkms - the open kernel modules never supported Pascal at all.
-  - apt-get install -y nvidia-driver=580.178.04-1 nvidia-driver-cuda=580.178.04-1 nvidia-kernel-dkms=580.178.04-1 nvidia-settings=580.178.04-1 nvidia-xconfig=580.178.04-1 nvidia-container-toolkit
+  #
+  # nvidia-opencl-icd is also named explicitly: it's a real, existing candidate in the repo
+  # (verified directly against the Packages file), but the solver refuses to auto-select it as a
+  # transitive dependency of nvidia-driver-cuda even though it selects the top-level packages named
+  # directly on this command line fine. Naming it directly here works around that.
+  - apt-get install -y nvidia-driver=580.178.04-1 nvidia-driver-cuda=580.178.04-1 nvidia-kernel-dkms=580.178.04-1 nvidia-settings=580.178.04-1 nvidia-xconfig=580.178.04-1 nvidia-opencl-icd=580.178.04-1 nvidia-container-toolkit
   modules:
     - name: nvidia-official-repo
       type: shell
