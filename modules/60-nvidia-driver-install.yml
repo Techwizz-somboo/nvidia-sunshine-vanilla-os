@@ -6,20 +6,20 @@ commands:
 
 modules:
 - name: install-nvidia
-  type: apt
-  sources:
-    - packages:
-      # Pinned to the 580 branch (not nvidia-open/cuda-drivers, which float to the newest available
-      # version): NVIDIA dropped Maxwell/Pascal/Volta support starting at driver 590, so anything
-      # newer won't recognize a GTX 1080. 580.178.04 is the last point release on the last branch
-      # that still supports it. Also using the closed kernel module (nvidia-kernel-dkms), not
-      # nvidia-kernel-open-dkms - the open kernel modules never supported Pascal at all.
-      - nvidia-driver=580.178.04-1
-      - nvidia-driver-cuda=580.178.04-1
-      - nvidia-kernel-dkms=580.178.04-1
-      - nvidia-settings=580.178.04-1
-      - nvidia-xconfig=580.178.04-1
-      - nvidia-container-toolkit
+  type: shell
+  commands:
+  # Pinned to the 580 branch (not nvidia-open/cuda-drivers, which float to the newest available
+  # version): NVIDIA dropped Maxwell/Pascal/Volta support starting at driver 590, so anything
+  # newer won't recognize a GTX 1080. 580.178.04 is the last point release on the last branch
+  # that still supports it. Also using the closed kernel module (nvidia-kernel-dkms), not
+  # nvidia-kernel-open-dkms - the open kernel modules never supported Pascal at all.
+  #
+  # --allow-unauthenticated: the built-in apt module type has no way to pass this, but it's
+  # required here - [trusted=yes] on the source line lets `apt-get update` itself succeed despite
+  # NVIDIA's key failing trixie's signature policy, but apt's solver still won't pull in this
+  # repo's *transitive* dependencies (nvidia-opencl-icd, nvidia-container-toolkit-base, etc.)
+  # without this flag, even though the explicitly-named top-level packages install fine either way.
+  - apt-get install -y --allow-unauthenticated nvidia-driver=580.178.04-1 nvidia-driver-cuda=580.178.04-1 nvidia-kernel-dkms=580.178.04-1 nvidia-settings=580.178.04-1 nvidia-xconfig=580.178.04-1 nvidia-container-toolkit
   modules:
     - name: nvidia-official-repo
       type: shell
